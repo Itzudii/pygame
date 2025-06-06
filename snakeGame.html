@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game</title>
+</head>
+
+<body style="background-color: rgb(34, 39, 56);">
+    <canvas id="myCanvas" style="border: 2px solid #555"></canvas>
+    <script type="module">
+        import { Pygame } from './j.js';
+        
+        async function main(){
+            const pygame = new Pygame();
+            
+            const screenX = 600;
+            const screenY = 400;
+            const screen = pygame.display.set_mode([screenX, screenY]);
+            
+            const FPS = 10;
+            pygame.set_fps(FPS);
+
+            const grid = 10;
+            const speed = grid;
+            
+            const board = new pygame.Rect(30, 100, screenX-60, screenY-130);
+            const head = new pygame.Rect(100, 100, grid, grid);
+            const food = new pygame.Rect(pygame.random.randint_gap(30,screenX-60,grid), pygame.random.randint_gap(100,screenY-130,grid), grid, grid);
+
+            let body = [];
+            let length = 1;
+            let direction = 'right';
+
+            let event = pygame.event;
+            event.init();
+
+            let font = new pygame.font(screen,'Roboto',30);
+            let score = 0;
+
+            let  primary = [24, 24, 37];
+            let  secondary = [34, 39, 56];
+            let  textcolor = [110, 120, 136];
+            
+
+            
+            pygame.gameloop = ()=> {
+                
+                screen.fill(primary);
+                if (event.Kclick('Escape')) {
+                    length += 1;
+                } else if (event.Kclick('ArrowLeft') && direction != 'right') {
+                    direction = 'left';
+                } else if (event.Kclick('ArrowRight')&& direction != 'left') {
+                    direction = 'right';
+                } else if (event.Kclick('ArrowDown')&& direction != 'up') {
+                    direction = 'down';
+                } else if (event.Kclick('ArrowUp')&& direction != 'down') {
+                    direction = 'up';
+                }
+                
+                if (body.length == length) {
+                    body.shift();
+                }
+
+                body.push(new pygame.Rect(head.x, head.y, head.w, head.h));
+                
+                if (direction == 'right') {
+                    head.x += speed;
+                } else if (direction == 'left') {
+                    head.x -= speed;
+                } else if (direction == 'down') {
+                    head.y += speed;
+                } else if (direction == 'up') {
+                    head.y -= speed;
+                }
+
+                if (!head.colliderect(board)){
+                    pygame.gameover();
+
+                }
+
+                if (food.colliderect(head)){
+                    length += 1;
+                    score += 1;
+                    food.x = pygame.random.randint_gap(30,screenX-60,grid);
+                    food.y = pygame.random.randint_gap(100,screenY-130,grid);
+                }
+                
+                
+                for (let i = 0; i < body.length; i++) {
+                    if (head.colliderect(body[i])){
+                        pygame.gameover();
+                        break;
+                    }
+                    pygame.draw.rect(screen, [255, 255, 255], body[i]);
+                }
+
+                pygame.draw.outlinerect(screen, textcolor, board,2);
+                pygame.draw.rect(screen, [255, 0, 0], food);
+                pygame.draw.rect(screen, [255, 255, 255], head);
+                font.fillrender(`score: ${score}`,textcolor,[250,0]);
+
+
+               pygame.gameover_event(()=>{
+                screen.fill(primary);
+                return 0;
+               });
+            }
+            pygame.gameloop();
+
+        }
+        
+        
+        document.addEventListener("DOMContentLoaded", main)
+    </script>
+</body>
+
+</html>
